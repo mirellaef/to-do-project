@@ -27,7 +27,60 @@ export const swaggerOptions: Options = {
         description: "Servidor atual",
       },
     ],
-    tags: [{ name: "Health", description: "Verificação de disponibilidade da API" }],
+    tags: [
+      { name: "Health", description: "Verificação de disponibilidade da API" },
+      { name: "Tasks", description: "CRUD de tarefas Kanban" },
+    ],
+    components: {
+      schemas: {
+        Task: {
+          type: "object",
+          required: ["id", "title", "description", "status", "createdAt"],
+          properties: {
+            id: { type: "string", format: "uuid" },
+            title: { type: "string" },
+            description: { type: "string" },
+            status: {
+              type: "string",
+              enum: ["todo", "in-progress", "done"],
+            },
+            createdAt: { type: "string", format: "date-time" },
+          },
+        },
+        CreateTaskBody: {
+          type: "object",
+          required: ["title"],
+          properties: {
+            title: { type: "string", minLength: 1 },
+            description: { type: "string", default: "" },
+            status: {
+              type: "string",
+              enum: ["todo", "in-progress", "done"],
+              default: "todo",
+            },
+          },
+        },
+        UpdateTaskBody: {
+          type: "object",
+          minProperties: 1,
+          properties: {
+            title: { type: "string", minLength: 1 },
+            description: { type: "string" },
+            status: {
+              type: "string",
+              enum: ["todo", "in-progress", "done"],
+            },
+          },
+        },
+        ErrorResponse: {
+          type: "object",
+          properties: {
+            error: { type: "string" },
+            details: { type: "object" },
+          },
+        },
+      },
+    },
   },
   apis: apis.map((p) => path.join(process.cwd(), p)),
 };

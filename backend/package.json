@@ -2,7 +2,7 @@
   "name": "kanban-backend",
   "version": "1.0.0",
   "private": true,
-  "description": "API REST do sistema Kanban (Etapa 1 — estrutura base)",
+  "description": "API REST do sistema Kanban (CRUD de tarefas, Swagger, validação Zod)",
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
@@ -16,7 +16,8 @@
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

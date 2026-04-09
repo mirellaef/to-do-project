@@ -6,5 +6,5 @@ const app = createApp();
 
 app.listen(PORT, () => {
   console.log(`Servidor em http://localhost:${PORT}`);
-  console.log(`Swagger UI em http://localhost:${PORT}/api-docs`);
+  console.log(`Swagger UI em http://localhost:${PORT}/docs`);
 });

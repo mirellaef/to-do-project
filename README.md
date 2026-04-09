@@ -4,21 +4,23 @@ Monorepo para um sistema de gerenciamento de tarefas no estilo **Kanban**, com b
 
 ## Estado atual do projeto
 
-| Parte      | Status | Local |
-| ---------- | ------ | ----- |
-| Backend    | Etapa 1 concluída (estrutura + Express + CORS + Swagger) | [`backend/`](backend/) |
+| Parte | Status | Local |
+| ----- | ------ | ----- |
+| Backend | Etapa 2: CRUD de tarefas (`/api/tasks`), validação Zod, middleware de erros, Swagger em `/docs` | [`backend/`](backend/) |
 | Banco/API mock | Planejado (json-server) | — |
-| Frontend   | Planejado (Vite + React + shadcn) | — |
+| Frontend | Planejado (Vite + React + shadcn) | — |
 
 ## Documentação do backend
 
-Instruções de instalação, scripts, variáveis de ambiente, mapa de pastas e endpoints estão em **[`backend/README.md`](backend/README.md)**.
+Instalação, variáveis de ambiente, mapa de pastas, modelo de tarefa e lista de endpoints: **[`backend/README.md`](backend/README.md)**.
+
+- **Swagger UI (local):** `http://localhost:3000/docs` (com `npm run dev` no `backend/`).
 
 ## Próximas etapas (resumo)
 
-1. **Banco de dados:** configurar `json-server` e modelo de dados (boards, colunas, cards).
+1. **Persistência:** `json-server` (ou outro) substituindo o armazenamento em memória.
 2. **Frontend:** aplicativo Vite + React + TypeScript + shadcn/ui consumindo a API.
 
 ---
 
-*Documentação detalhada da API e da arquitetura do servidor: ver [`backend/README.md`](backend/README.md).*
+*Detalhes da API: [`backend/README.md`](backend/README.md).*

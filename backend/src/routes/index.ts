@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { getHealth } from "../controllers/health.controller";
+import { tasksRouter } from "./tasks.routes";
 
 export const router = Router();
+
+router.use("/tasks", tasksRouter);
 
 /**
  * @openapi
