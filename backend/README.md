@@ -1,6 +1,6 @@
 # Kanban — Backend (Node.js + TypeScript)
 
-API REST em **Express** com **CORS**, documentação **OpenAPI 3** via **Swagger UI** em **`/docs`** (gerada com **swagger-jsdoc** + schemas em `config/swagger.ts`). Inclui **CRUD de tarefas** com validação (**Zod**), camada **service** (armazenamento em memória), **middleware de erros** centralizado e helpers **async**.
+API REST em **Express** com **CORS**, documentação **OpenAPI 3** via **Swagger UI** em **`/docs`** (gerada com **swagger-jsdoc** + schemas em `config/swagger.ts`). Inclui **CRUD de tarefas** com validação (**Zod**), **middleware de erros** centralizado e persistência das tarefas via **json-server** (HTTP), com arquivo em [`../database/db.json`](../database/db.json).
 
 ## Pré-requisitos
 
@@ -29,44 +29,66 @@ No Linux/macOS:
 cp .env.example .env
 ```
 
-| Variável   | Descrição | Padrão (se omitida) |
-| ---------- | --------- | --------------------- |
-| `PORT`     | Porta HTTP | `3000` |
+| Variável | Descrição | Padrão (se omitida) |
+| -------- | --------- | --------------------- |
+| `PORT` | Porta HTTP da API Express | `3000` |
 | `NODE_ENV` | `development` ou `production` (afeta quais arquivos o swagger-jsdoc escaneia para montar a spec) | — |
+| `JSON_SERVER_URL` | URL base do **json-server** (sem barra final) | `http://localhost:5555` |
+
+O arquivo [`.env`](.env) é carregado automaticamente em [`src/server.ts`](src/server.ts) via `dotenv`.
+
+## Persistência (json-server)
+
+- Arquivo de dados: **`database/db.json`** na raiz do repositório (não dentro de `backend/`), com chave raiz `"tasks"`.
+- O **json-server** escuta na porta **5555** por padrão (script `db:server`).
+- A API Express (**porta `PORT`**, default 3000) fala com o json-server por **HTTP** (`fetch`), implementado em [`src/services/jsonServerTasks.client.ts`](src/services/jsonServerTasks.client.ts).
+
+**Ordem ao desenvolver:** subir o json-server antes ou junto da API (veja `dev:all` abaixo). Se o json-server não estiver acessível, as rotas de tarefas respondem **503** com mensagem indicando indisponibilidade do serviço de dados.
 
 ## Scripts
 
-| Comando      | Descrição |
-| ------------ | --------- |
-| `npm run dev`   | Sobe o servidor em modo desenvolvimento com recarregamento (`tsx watch`). |
+| Comando | Descrição |
+| ------- | --------- |
+| `npm run dev` | Sobe só a API Express com recarregamento (`tsx watch`). |
+| `npm run db:server` | Sobe o **json-server** em `http://localhost:5555` com watch em `../database/db.json`. |
+| `npm run dev:all` | Sobe **json-server** e **API** em paralelo (`concurrently`). |
 | `npm run build` | Compila TypeScript para `dist/`. |
-| `npm start`     | Executa `node dist/server.js` (use após `npm run build`). |
+| `npm start` | Executa `node dist/server.js` (use após `npm run build`). |
 
 ## Como rodar
 
-**Desenvolvimento:**
+**Desenvolvimento (recomendado — um terminal):**
+
+```bash
+npm run dev:all
+```
+
+**Ou dois terminais** (na pasta `backend/`):
+
+```bash
+npm run db:server
+```
 
 ```bash
 npm run dev
 ```
 
-**Produção (após build):**
+**Produção (após build):** é necessário o json-server (ou outro processo servindo o mesmo contrato REST) acessível em `JSON_SERVER_URL`.
 
 ```bash
 npm run build
-set NODE_ENV=production
-npm start
+$env:NODE_ENV="production"; npm start
 ```
 
-No PowerShell, `set` não aplica; use `$env:NODE_ENV="production"; npm start`.
+No cmd: `set NODE_ENV=production` antes de `npm start`.
 
 ## Documentação interativa (Swagger)
 
-Com o servidor no ar:
+Com a API no ar:
 
 - **Swagger UI:** [http://localhost:3000/docs](http://localhost:3000/docs) (ajuste a porta se `PORT` for outra).
 
-A especificação é montada a partir dos arquivos em `src/routes/` e `src/controllers/` (em desenvolvimento, `.ts`; em produção, após build, `.js` em `dist/`), com **schemas reutilizáveis** em `src/config/swagger.ts` (`components.schemas`).
+A especificação é montada a partir dos arquivos em `src/routes/` e `src/controllers/`, com **schemas** em `src/config/swagger.ts` (`components.schemas`).
 
 ## Endpoints
 
@@ -83,70 +105,48 @@ A especificação é montada a partir dos arquivos em `src/routes/` e `src/contr
 
 | Campo | Tipo | Observações |
 | ----- | ---- | ----------- |
-| `id` | string (UUID) | Gerado no servidor |
+| `id` | string (UUID) | Gerado pela API ao criar e enviado ao json-server |
 | `title` | string | Obrigatório na criação |
 | `description` | string | Default `""` |
 | `status` | string | `"todo"` \| `"in-progress"` \| `"done"` |
-| `createdAt` | string (ISO 8601) | Definido na criação |
-
-**Persistência:** em memória (reiniciar o processo apaga os dados). Próxima etapa: integrar **json-server** ou outro armazenamento.
+| `createdAt` | string (ISO 8601) | Definido na criação; persistido no `db.json` |
 
 ### Erros
 
-Respostas de erro seguem o formato `{ "error": string, "details?"?: ... }` com status **400** (validação), **404** (tarefa inexistente) ou **500** (não tratado).
+Respostas de erro seguem o formato `{ "error": string, "details?"?: ... }` com status **400** (validação), **404** (tarefa inexistente), **503** (json-server inacessível ou erro 5xx no proxy) ou **500** (erro interno não tratado).
 
-## Estrutura de pastas
+## Estrutura de pastas (trecho relevante)
 
 ```
-backend/
-├── package.json
-├── tsconfig.json
-├── .env.example
-├── .gitignore
-└── src/
-    ├── server.ts
-    ├── app.ts
-    ├── config/
-    │   └── swagger.ts       # OpenAPI base + components (Task, bodies, ErrorResponse)
-    ├── routes/
-    │   ├── index.ts         # /api/health + /api/tasks
-    │   └── tasks.routes.ts  # Rotas CRUD + JSDoc OpenAPI
-    ├── controllers/
-    │   ├── health.controller.ts
-    │   └── task.controller.ts
-    ├── services/
-    │   ├── health.service.ts
-    │   └── task.service.ts  # Repositório em memória
-    ├── models/
-    │   └── task.model.ts
-    ├── validators/
-    │   └── task.validator.ts # Schemas Zod (create/update)
-    ├── middlewares/
-    │   ├── validate.middleware.ts
-    │   └── errorHandler.middleware.ts  # errorHandler + asyncHandler
-    └── utils/
-        └── http-error.ts
+projeto/
+├── database/
+│   └── db.json              # Dados mock (tasks); alterado pelo json-server --watch
+└── backend/
+    ├── package.json
+    ├── tsconfig.json
+    ├── .env.example
+    └── src/
+        ├── server.ts        # dotenv + listen
+        ├── app.ts
+        ├── services/
+        │   ├── task.service.ts              # Orquestra CRUD + mapeamento Task
+        │   └── jsonServerTasks.client.ts    # fetch para json-server
+        └── ...
 ```
 
 ### Responsabilidades
 
-- **`server.ts`** — porta e `app.listen`.
-- **`app.ts`** — CORS, JSON, `/docs`, montagem de `/api`, **middleware de erro por último**.
-- **`routes/`** — apenas rotas e documentação Swagger nas anotações.
-- **`controllers/`** — orquestra HTTP e delega ao service.
-- **`services/`** — regras e acesso aos dados (aqui: `Map` em memória).
-- **`validators/`** — schemas Zod compartilhados entre validação e tipos inferidos.
-- **`middlewares/`** — `validateBody`, `errorHandler`, `asyncHandler`.
-- **`utils/http-error.ts`** — erros HTTP tipados (`HttpError`).
+- **`task.service.ts`** — regras de montagem de payloads, ordenação da lista e conversão do JSON do json-server para `Task`.
+- **`jsonServerTasks.client.ts`** — apenas HTTP (`GET/POST/PATCH/DELETE`) e tratamento de status (404, 5xx, rede).
 
 ## O que ainda não está no projeto
 
-- **json-server** ou persistência em arquivo.
 - Frontend (Vite, React, shadcn).
 
 ## Verificação rápida
 
-1. `npm install`
-2. `npm run dev`
+1. `npm install` em `backend/`
+2. `npm run dev:all`
 3. [http://localhost:3000/api/health](http://localhost:3000/api/health), [http://localhost:3000/docs](http://localhost:3000/docs)
-4. `POST /api/tasks` com JSON `{ "title": "Minha tarefa" }` e listar com `GET /api/tasks`
+4. `POST /api/tasks` com `{ "title": "Minha tarefa" }` e conferir se `database/db.json` foi atualizado
+5. Reiniciar só a API: as tarefas permanecem no arquivo

@@ -1,54 +1,79 @@
 import { randomUUID } from "crypto";
-import type { Task } from "../models/task.model";
+import type { Task, TaskStatus } from "../models/task.model";
 import type { CreateTaskInput, UpdateTaskInput } from "../validators/task.validator";
 import { HttpError } from "../utils/http-error";
+import * as jsonServer from "./jsonServerTasks.client";
 
-const tasks = new Map<string, Task>();
+const STATUSES: TaskStatus[] = ["todo", "in-progress", "done"];
 
-export function listTasks(): Task[] {
-  return [...tasks.values()].sort(
-    (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
-  );
+function isTaskStatus(value: unknown): value is TaskStatus {
+  return typeof value === "string" && STATUSES.includes(value as TaskStatus);
 }
 
-export function getTaskById(id: string): Task {
-  const task = tasks.get(id);
-  if (!task) {
-    throw new HttpError(404, "Tarefa não encontrada");
+function parseTask(raw: unknown): Task {
+  if (!raw || typeof raw !== "object") {
+    throw new HttpError(502, "Formato de tarefa inválido no json-server");
   }
-  return task;
+  const o = raw as Record<string, unknown>;
+  return {
+    id: String(o.id),
+    title: String(o.title ?? ""),
+    description: String(o.description ?? ""),
+    status: isTaskStatus(o.status) ? o.status : "todo",
+    createdAt: new Date(
+      typeof o.createdAt === "string" || typeof o.createdAt === "number"
+        ? o.createdAt
+        : String(o.createdAt ?? "")
+    ),
+  };
 }
 
-export function createTask(input: CreateTaskInput): Task {
-  const task: Task = {
+export async function listTasks(): Promise<Task[]> {
+  const data = await jsonServer.fetchTasksList();
+  if (!Array.isArray(data)) {
+    throw new HttpError(502, "Resposta inesperada ao listar tarefas");
+  }
+  return data
+    .map(parseTask)
+    .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+}
+
+export async function getTaskById(id: string): Promise<Task> {
+  const data = await jsonServer.fetchTaskById(id);
+  return parseTask(data);
+}
+
+export async function createTask(input: CreateTaskInput): Promise<Task> {
+  const createdAtIso = new Date().toISOString();
+  const payload = {
     id: randomUUID(),
     title: input.title,
     description: input.description ?? "",
     status: input.status,
-    createdAt: new Date(),
+    createdAt: createdAtIso,
   };
-  tasks.set(task.id, task);
-  return task;
+  const data = await jsonServer.postTask(payload);
+  return parseTask(data);
 }
 
-export function updateTask(id: string, input: UpdateTaskInput): Task {
-  const existing = tasks.get(id);
-  if (!existing) {
-    throw new HttpError(404, "Tarefa não encontrada");
+export async function updateTask(
+  id: string,
+  input: UpdateTaskInput
+): Promise<Task> {
+  const body: Record<string, unknown> = {};
+  if (input.title !== undefined) {
+    body.title = input.title;
   }
-  const updated: Task = {
-    ...existing,
-    ...(input.title !== undefined ? { title: input.title } : {}),
-    ...(input.description !== undefined ? { description: input.description } : {}),
-    ...(input.status !== undefined ? { status: input.status } : {}),
-  };
-  tasks.set(id, updated);
-  return updated;
+  if (input.description !== undefined) {
+    body.description = input.description;
+  }
+  if (input.status !== undefined) {
+    body.status = input.status;
+  }
+  const data = await jsonServer.patchTask(id, body);
+  return parseTask(data);
 }
 
-export function deleteTask(id: string): void {
-  if (!tasks.has(id)) {
-    throw new HttpError(404, "Tarefa não encontrada");
-  }
-  tasks.delete(id);
+export async function deleteTask(id: string): Promise<void> {
+  await jsonServer.deleteTaskRemote(id);
 }
