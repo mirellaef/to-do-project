@@ -1,4 +1,4 @@
-# Kanban — Backend (Node.js + TypeScript)
+# To-do-project — Backend (Node.js + TypeScript)
 
 API REST em **Express** com **CORS**, documentação **OpenAPI 3** via **Swagger UI** em **`/docs`** (gerada com **swagger-jsdoc** + schemas em `config/swagger.ts`). Inclui **CRUD de tarefas** com validação (**Zod**), **middleware de erros** centralizado e persistência das tarefas via **json-server** (HTTP), com arquivo em [`../database/db.json`](../database/db.json).
 

@@ -1,6 +1,5 @@
-import { API_BASE } from "@/services/api";
+import { API_BASE } from "@/services/apiClient";
 
-/** Retorna a URL base da API (mesmo valor usado em `apiFetch`). */
 export function useApiBase(): string {
   return API_BASE;
 }

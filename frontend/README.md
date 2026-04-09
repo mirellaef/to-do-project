@@ -1,6 +1,6 @@
-# Kanban — Frontend (Vite + React + TypeScript + shadcn/ui)
+# To-do-project — Frontend (Vite + React + TypeScript + shadcn/ui)
 
-Interface web com **Vite**, **React 19**, **TypeScript**, **Tailwind CSS v4** e **shadcn/ui** (estilo radix-nova, componentes em `src/components/ui`).
+Interface web com **Vite**, **React 19**, **TypeScript**, **Tailwind CSS v4** e **shadcn/ui**. O quadro **Kanban** consome a API em `/api/tasks` via **axios** (`apiClient` + `tasksApi`).
 
 ## Portas (convenção do monorepo)
 
@@ -10,10 +10,18 @@ Interface web com **Vite**, **React 19**, **TypeScript**, **Tailwind CSS v4** e 
 | API Express | **5173** |
 | json-server | **5555** |
 
+## Funcionalidades (Etapa 5)
+
+- Três colunas: **To Do**, **In Progress**, **Done**
+- **Criar / editar / excluir** tarefas (dialogs shadcn)
+- **Arrastar e soltar** entre colunas (@dnd-kit) — atualiza `status` via `PUT /api/tasks/:id`
+- **Busca** por título ou descrição e **filtro** por status
+- **Toasts** (Sonner) para feedback de operações e erros
+
 ## Pré-requisitos
 
 - Node.js 20+
-- Backend em [`../backend`](../backend) (e json-server) quando for consumir `/api`
+- Backend em [`../backend`](../backend) com `npm run dev:all` (API + json-server) ao desenvolver
 
 ## Instalação
 
@@ -24,8 +32,6 @@ npm install
 
 ## Variáveis de ambiente
 
-Copie o exemplo:
-
 ```bash
 copy .env.example .env
 ```
@@ -34,41 +40,36 @@ copy .env.example .env
 | -------- | --------- | --------------------- |
 | `VITE_API_URL` | URL base da API Express | `http://localhost:5173` |
 
-No Vite, apenas variáveis prefixadas com `VITE_` são expostas ao cliente.
-
 ## Scripts
 
 | Comando | Descrição |
 | ------- | --------- |
-| `npm run dev` | Servidor de desenvolvimento (`http://localhost:3000`) |
-| `npm run build` | Build de produção em `dist/` |
-| `npm run preview` | Preview do build |
+| `npm run dev` | Dev em `http://localhost:3000` |
+| `npm run build` | Build em `dist/` |
+| `npm run preview` | Preview do build (porta 3000) |
 
-## Estrutura de pastas
+## Estrutura relevante
 
 ```
-frontend/
-├── components.json          # Configuração shadcn/ui
-├── src/
-│   ├── main.tsx
-│   ├── App.tsx
-│   ├── index.css            # Tailwind + tema shadcn
-│   ├── components/ui/       # Componentes shadcn (ex.: button)
-│   ├── layouts/             # Layouts (ex.: MainLayout)
-│   ├── pages/               # Páginas (ex.: HomePage)
-│   ├── services/            # Cliente HTTP (api.ts)
-│   ├── hooks/               # Hooks (ex.: useApiBase)
-│   ├── types/               # Tipos (ex.: Task)
-│   └── lib/utils.ts         # helper `cn()` do shadcn
-└── vite.config.ts           # Alias `@` → `src`
+frontend/src/
+  services/
+    apiClient.ts      # axios + interceptor de erro
+    tasksApi.ts       # CRUD /api/tasks
+  hooks/
+    useTasks.ts       # estado, refetch, mutações + toasts
+    useApiBase.ts
+  components/kanban/
+    KanbanBoard.tsx
+    KanbanColumn.tsx
+    TaskCard.tsx
+    TaskFormDialog.tsx
+    DeleteTaskDialog.tsx
+  pages/
+    KanbanPage.tsx
 ```
 
 ## Desenvolvimento fullstack
 
-1. Terminal — na pasta `backend/`: `npm run dev:all` (API + json-server) ou processos separados conforme [`backend/README.md`](../backend/README.md).
-2. Terminal — na pasta `frontend/`: `npm run dev`.
-3. Ajuste `VITE_API_URL` se a API não estiver em `http://localhost:5173`.
-
-## Próximas etapas
-
-- Quadro Kanban, listagem de tarefas e formulários chamando `apiFetch("/api/tasks", …)`.
+1. `backend/`: `npm run dev:all`
+2. `frontend/`: `npm run dev`
+3. Abrir `http://localhost:3000` e garantir que a API responde em `http://localhost:5173`
