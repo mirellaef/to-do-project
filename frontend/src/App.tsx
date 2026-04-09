@@ -1,10 +1,10 @@
 import { MainLayout } from "@/layouts/MainLayout";
-import { HomePage } from "@/pages/HomePage";
+import { TodoProjectPage } from "@/pages/TodoProjectPage";
 
 export default function App() {
   return (
     <MainLayout>
-      <HomePage />
+      <TodoProjectPage />
     </MainLayout>
   );
 }

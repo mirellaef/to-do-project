@@ -1,3 +1,11 @@
 {
-  "tasks": []
+  "tasks": [
+    {
+      "id": "9b72fb20-2a2b-470c-8158-109ba84d49fb",
+      "title": "Tarefa de Teste 1",
+      "description": "Primeira tarefa!",
+      "status": "todo",
+      "createdAt": "2026-04-09T23:47:20.613Z"
+    }
+  ]
 }

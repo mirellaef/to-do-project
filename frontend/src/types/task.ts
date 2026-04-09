@@ -5,6 +5,5 @@ export interface Task {
   title: string;
   description: string;
   status: TaskStatus;
-  /** ISO 8601 na API; pode vir como string no JSON */
   createdAt: string;
 }
