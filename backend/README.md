@@ -1,6 +1,14 @@
-# Kanban — Backend (Node.js + TypeScript)
+# To-do-project — Backend (Node.js + TypeScript)
 
 API REST em **Express** com **CORS**, documentação **OpenAPI 3** via **Swagger UI** em **`/docs`** (gerada com **swagger-jsdoc** + schemas em `config/swagger.ts`). Inclui **CRUD de tarefas** com validação (**Zod**), **middleware de erros** centralizado e persistência das tarefas via **json-server** (HTTP), com arquivo em [`../database/db.json`](../database/db.json).
+
+## Portas (convenção do monorepo)
+
+| Serviço | Porta |
+| ------- | ----- |
+| Frontend (Vite) | **3000** |
+| API Express (este serviço) | **5173** (`PORT`) |
+| json-server | **5555** |
 
 ## Pré-requisitos
 
@@ -31,7 +39,7 @@ cp .env.example .env
 
 | Variável | Descrição | Padrão (se omitida) |
 | -------- | --------- | --------------------- |
-| `PORT` | Porta HTTP da API Express | `3000` |
+| `PORT` | Porta HTTP da API Express | `5173` |
 | `NODE_ENV` | `development` ou `production` (afeta quais arquivos o swagger-jsdoc escaneia para montar a spec) | — |
 | `JSON_SERVER_URL` | URL base do **json-server** (sem barra final) | `http://localhost:5555` |
 
@@ -41,7 +49,7 @@ O arquivo [`.env`](.env) é carregado automaticamente em [`src/server.ts`](src/s
 
 - Arquivo de dados: **`database/db.json`** na raiz do repositório (não dentro de `backend/`), com chave raiz `"tasks"`.
 - O **json-server** escuta na porta **5555** por padrão (script `db:server`).
-- A API Express (**porta `PORT`**, default 3000) fala com o json-server por **HTTP** (`fetch`), implementado em [`src/services/jsonServerTasks.client.ts`](src/services/jsonServerTasks.client.ts).
+- A API Express (**porta `PORT`**, default **5173**) fala com o json-server por **HTTP** (`fetch`), implementado em [`src/services/jsonServerTasks.client.ts`](src/services/jsonServerTasks.client.ts).
 
 **Ordem ao desenvolver:** subir o json-server antes ou junto da API (veja `dev:all` abaixo). Se o json-server não estiver acessível, as rotas de tarefas respondem **503** com mensagem indicando indisponibilidade do serviço de dados.
 
@@ -86,7 +94,7 @@ No cmd: `set NODE_ENV=production` antes de `npm start`.
 
 Com a API no ar:
 
-- **Swagger UI:** [http://localhost:3000/docs](http://localhost:3000/docs) (ajuste a porta se `PORT` for outra).
+- **Swagger UI:** [http://localhost:5173/docs](http://localhost:5173/docs) (ajuste a porta se `PORT` for outra).
 
 A especificação é montada a partir dos arquivos em `src/routes/` e `src/controllers/`, com **schemas** em `src/config/swagger.ts` (`components.schemas`).
 
@@ -147,6 +155,6 @@ projeto/
 
 1. `npm install` em `backend/`
 2. `npm run dev:all`
-3. [http://localhost:3000/api/health](http://localhost:3000/api/health), [http://localhost:3000/docs](http://localhost:3000/docs)
+3. [http://localhost:5173/api/health](http://localhost:5173/api/health), [http://localhost:5173/docs](http://localhost:5173/docs)
 4. `POST /api/tasks` com `{ "title": "Minha tarefa" }` e conferir se `database/db.json` foi atualizado
 5. Reiniciar só a API: as tarefas permanecem no arquivo
